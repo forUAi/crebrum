@@ -1,0 +1,15 @@
+# Dependency directories
+node_modules
+
+# Environment variables
+.env
+
+# Production builds
+dist
+build
+
+# Vercel & local settings
+.vercel
+
+# System files
+.DS_Store
