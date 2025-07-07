@@ -1,4 +1,3 @@
-// /api/complete.js
 export default async function handler(req, res) {
   try {
     const { prompt } = req.body;
@@ -26,27 +25,24 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    const result = data.choices?.[0]?.message?.content;
+    const content = data.choices?.[0]?.message?.content;
 
-    if (!result) {
-      return res.status(500).json({
-        result: JSON.stringify({
-          response: "I'm sorry, I couldn't generate a response.",
-          newMemories: [],
-          newGoals: [],
-          newProjects: [],
-          newInsights: [],
-          suggestedActions: []
-        })
-      });
-    }
+    // 👇 Fallback to valid JSON if content is missing or invalid
+    const result = content || JSON.stringify({
+      response: "I'm sorry, I couldn't generate a response.",
+      newMemories: [],
+      newGoals: [],
+      newProjects: [],
+      newInsights: [],
+      suggestedActions: []
+    });
 
     res.status(200).json({ result });
   } catch (error) {
-    console.error("OpenAI API Error:", error);
+    console.error("Error in /api/complete:", error);
     res.status(500).json({
       result: JSON.stringify({
-        response: "Oops, something went wrong on the server.",
+        response: "An internal error occurred.",
         newMemories: [],
         newGoals: [],
         newProjects: [],
@@ -56,4 +52,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
