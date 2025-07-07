@@ -43,8 +43,14 @@ Respond with a JSON object in this exact format:
 
 CRITICAL: Your entire response must be a single, valid JSON object.`;
 
-      const aiResponse = await window.claude.complete(prompt);
-      const parsedResponse = JSON.parse(aiResponse);
+      const res = await fetch('/api/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const { result } = await res.json();
+      const parsedResponse = JSON.parse(result);
+
 
       // Store the raw journal entry as a memory
       const journalMemory = {
@@ -182,8 +188,14 @@ Respond with a JSON object in this exact format:
 
 CRITICAL: Your entire response must be a single, valid JSON object. Do not include any text outside the JSON structure.`;
 
-      const aiResponse = await window.claude.complete(prompt);
-      const parsedResponse = JSON.parse(aiResponse);
+      const res = await fetch('/api/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const { result } = await res.json();
+      const parsedResponse = JSON.parse(result);
+
 
       // Add AI message
       const aiMessage = {
@@ -261,11 +273,10 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
   const TabButton = ({ id, icon: Icon, label, count = 0 }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-        activeTab === id
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === id
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
     >
       <Icon size={18} />
       <span className="font-medium">{label}</span>
@@ -350,11 +361,10 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                     className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-3xl p-4 rounded-lg ${
-                        message.type === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-gray-900 shadow-sm'
-                      }`}
+                      className={`max-w-3xl p-4 rounded-lg ${message.type === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-900 shadow-sm'
+                        }`}
                     >
                       <p className="whitespace-pre-wrap">{message.content}</p>
                       {message.suggestedActions && message.suggestedActions.length > 0 && (
@@ -417,7 +427,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">Personal Journal</h2>
                   <p className="text-gray-600">Write your thoughts, reflections, and experiences. Your AI will automatically extract and remember key insights.</p>
                 </div>
-                
+
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -430,7 +440,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                       className="w-full h-64 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <div className="text-sm text-gray-500">
                       {journalEntry.length} characters
@@ -499,9 +509,8 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                     <div key={goal.id} className="bg-white p-4 rounded-lg shadow-sm">
                       <div className="flex items-center justify-between">
                         <p className="text-gray-900 font-medium">{goal.content}</p>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          goal.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs ${goal.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
                           {goal.status}
                         </span>
                       </div>
@@ -526,9 +535,8 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                     <div key={project.id} className="bg-white p-4 rounded-lg shadow-sm">
                       <div className="flex items-center justify-between">
                         <p className="text-gray-900 font-medium">{project.content}</p>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          project.status === 'active' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs ${project.status === 'active' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
                           {project.status}
                         </span>
                       </div>
