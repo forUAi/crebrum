@@ -25,6 +25,8 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    console.log("🔍 OpenAI API Response:", data);
+
     const content = data.choices?.[0]?.message?.content;
 
     // 👇 Fallback to valid JSON if content is missing or invalid
