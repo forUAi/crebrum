@@ -1,3 +1,6 @@
+setuptools>=65.5.0
+wheel>=0.40.0
+
 # Core FastAPI dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
