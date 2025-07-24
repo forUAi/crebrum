@@ -7,7 +7,7 @@ pydantic-settings==2.1.0
 # Vector search and embeddings
 sentence-transformers==2.2.2
 faiss-cpu==1.7.4
-torch==2.2.2
+torch==2.5.1
 transformers==4.36.0
 
 # BM25 text search
