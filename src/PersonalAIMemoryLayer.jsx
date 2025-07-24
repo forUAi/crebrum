@@ -43,14 +43,42 @@ Respond with a JSON object in this exact format:
 
 CRITICAL: Your entire response must be a single, valid JSON object.`;
 
-      const res = await fetch('/api/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+      const res = await fetch("http://127.0.0.1:8000/cognitive/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          history: []
+        })
       });
-      const { result } = await res.json();
-      const parsedResponse = JSON.parse(result);
 
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('HTTP Error Details:', {
+          status: res.status,
+          statusText: res.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! status: ${res.status} - ${errorText}`);
+      }
+
+      const data = await res.json();
+      console.log('Chat Backend response:', data); // Debug log
+
+      // Handle different possible response formats
+      let parsedResponse;
+      if (data.result) {
+        parsedResponse = JSON.parse(data.result);
+      } else if (data.response !== undefined) {
+        // If backend returns response directly (your current format)
+        parsedResponse = data;
+      } else {
+        // Log the actual structure and throw error
+        console.error('Unexpected chat response structure:', data);
+        throw new Error('Invalid response format from backend');
+      }
 
       // Store the raw journal entry as a memory
       const journalMemory = {
@@ -65,8 +93,8 @@ CRITICAL: Your entire response must be a single, valid JSON object.`;
 
       // Add extracted data
       if (parsedResponse.memories && parsedResponse.memories.length > 0) {
-        const extractedMemories = parsedResponse.memories.map(memory => ({
-          id: Date.now() + Math.random(),
+        const extractedMemories = parsedResponse.memories.map((memory, index) => ({
+          id: Date.now() + index + 1,
           content: memory,
           timestamp: new Date(),
           source: 'journal_extracted'
@@ -75,8 +103,8 @@ CRITICAL: Your entire response must be a single, valid JSON object.`;
       }
 
       if (parsedResponse.goals && parsedResponse.goals.length > 0) {
-        const extractedGoals = parsedResponse.goals.map(goal => ({
-          id: Date.now() + Math.random(),
+        const extractedGoals = parsedResponse.goals.map((goal, index) => ({
+          id: Date.now() + index + 1,
           content: goal,
           timestamp: new Date(),
           status: 'active',
@@ -86,8 +114,8 @@ CRITICAL: Your entire response must be a single, valid JSON object.`;
       }
 
       if (parsedResponse.projects && parsedResponse.projects.length > 0) {
-        const extractedProjects = parsedResponse.projects.map(project => ({
-          id: Date.now() + Math.random(),
+        const extractedProjects = parsedResponse.projects.map((project, index) => ({
+          id: Date.now() + index + 1,
           content: project,
           timestamp: new Date(),
           status: 'active',
@@ -97,8 +125,8 @@ CRITICAL: Your entire response must be a single, valid JSON object.`;
       }
 
       if (parsedResponse.insights && parsedResponse.insights.length > 0) {
-        const extractedInsights = parsedResponse.insights.map(insight => ({
-          id: Date.now() + Math.random(),
+        const extractedInsights = parsedResponse.insights.map((insight, index) => ({
+          id: Date.now() + index + 1,
           content: insight,
           timestamp: new Date(),
           source: 'journal'
@@ -109,6 +137,7 @@ CRITICAL: Your entire response must be a single, valid JSON object.`;
       setJournalEntry('');
     } catch (error) {
       console.error('Error processing journal entry:', error);
+      // Add error handling UI feedback here if needed
     }
   };
 
@@ -137,44 +166,20 @@ CRITICAL: Your entire response must be a single, valid JSON object.`;
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsLoading(true);
 
     try {
-      // Prepare context for AI including all memories, goals, and projects
-      const contextData = {
-        conversationHistory: messages,
-        memories: memories,
-        goals: goals,
-        projects: projects,
-        insights: insights,
-        currentMessage: inputValue
-      };
+      // Prepare conversation history (include the new user message)
+      const conversationHistory = [...messages, userMessage].slice(-10).map(msg => msg.content);
 
-      const prompt = `You are a personal AI memory layer and cognitive partner. You have access to the user's complete context:
+      // Prepare a simpler prompt for the chat
+      const prompt = `You are a personal AI memory layer and cognitive partner. 
 
-CONVERSATION HISTORY:
-${JSON.stringify(messages)}
+Current user message: "${currentInput}"
 
-USER'S MEMORIES:
-${JSON.stringify(memories)}
-
-USER'S GOALS:
-${JSON.stringify(goals)}
-
-USER'S PROJECTS:
-${JSON.stringify(projects)}
-
-PREVIOUS INSIGHTS:
-${JSON.stringify(insights)}
-
-CURRENT MESSAGE: "${inputValue}"
-
-Based on this complete context, respond as their intelligent cognitive partner. Consider:
-1. What can you extract as new memories, goals, or projects from this message?
-2. How does this relate to their existing context?
-3. What insights or connections can you make?
-4. What proactive suggestions can you offer?
+Based on this message and our conversation history, respond as their intelligent cognitive partner.
 
 Respond with a JSON object in this exact format:
 {
@@ -186,22 +191,76 @@ Respond with a JSON object in this exact format:
   "suggestedActions": ["array of suggested next actions"]
 }
 
-CRITICAL: Your entire response must be a single, valid JSON object. Do not include any text outside the JSON structure.`;
+CRITICAL: Your entire response must be a single, valid JSON object.`;
 
-      const res = await fetch('/api/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+      const requestPayload = {
+        prompt: prompt,
+        history: conversationHistory
+      };
+
+      console.log('Chat request payload:', {
+        prompt: prompt.substring(0, 100) + '...',
+        history: conversationHistory
+      }); // Debug log with consistent data
+
+      const res = await fetch("http://127.0.0.1:8000/cognitive/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestPayload)
       });
-      const { result } = await res.json();
-      const parsedResponse = JSON.parse(result);
 
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('HTTP Error Details:', {
+          status: res.status,
+          statusText: res.statusText,
+          body: errorText
+        });
+        throw new Error(`HTTP error! status: ${res.status} - ${errorText}`);
+      }
+
+      const data = await res.json();
+      console.log('Chat backend response:', data); // Debug log
+
+      // Handle different possible response formats
+      let parsedResponse;
+
+      // If the response is already in the expected format
+      if (data.response !== undefined) {
+        parsedResponse = data;
+      }
+      // If the response is wrapped in a result field
+      else if (data.result) {
+        try {
+          parsedResponse = JSON.parse(data.result);
+        } catch (parseError) {
+          console.error('Failed to parse result field:', parseError);
+          throw new Error('Invalid JSON in result field');
+        }
+      }
+      // If backend returns different format, try to adapt
+      else if (data.memories !== undefined || data.goals !== undefined) {
+        parsedResponse = {
+          response: data.response || "I received your message.",
+          newMemories: data.memories || [],
+          newGoals: data.goals || [],
+          newProjects: data.projects || [],
+          newInsights: data.insights || [],
+          suggestedActions: data.suggestedActions || []
+        };
+      }
+      else {
+        console.error('Unexpected response structure:', data);
+        throw new Error('Invalid response format from backend');
+      }
 
       // Add AI message
       const aiMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: parsedResponse.response,
+        content: parsedResponse.response || "I received your message but couldn't generate a proper response.",
         timestamp: new Date(),
         suggestedActions: parsedResponse.suggestedActions || []
       };
@@ -211,8 +270,8 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
       // Update memories, goals, projects, and insights
       if (parsedResponse.newMemories && parsedResponse.newMemories.length > 0) {
         triggerMemoryAnimation();
-        setMemories(prev => [...prev, ...parsedResponse.newMemories.map(memory => ({
-          id: Date.now() + Math.random(),
+        setMemories(prev => [...prev, ...parsedResponse.newMemories.map((memory, index) => ({
+          id: Date.now() + index + 2,
           content: memory,
           timestamp: new Date(),
           source: 'conversation'
@@ -220,28 +279,31 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
       }
 
       if (parsedResponse.newGoals && parsedResponse.newGoals.length > 0) {
-        setGoals(prev => [...prev, ...parsedResponse.newGoals.map(goal => ({
-          id: Date.now() + Math.random(),
+        setGoals(prev => [...prev, ...parsedResponse.newGoals.map((goal, index) => ({
+          id: Date.now() + index + 2,
           content: goal,
           timestamp: new Date(),
-          status: 'active'
+          status: 'active',
+          source: 'conversation'
         }))]);
       }
 
       if (parsedResponse.newProjects && parsedResponse.newProjects.length > 0) {
-        setProjects(prev => [...prev, ...parsedResponse.newProjects.map(project => ({
-          id: Date.now() + Math.random(),
+        setProjects(prev => [...prev, ...parsedResponse.newProjects.map((project, index) => ({
+          id: Date.now() + index + 2,
           content: project,
           timestamp: new Date(),
-          status: 'active'
+          status: 'active',
+          source: 'conversation'
         }))]);
       }
 
       if (parsedResponse.newInsights && parsedResponse.newInsights.length > 0) {
-        setInsights(prev => [...prev, ...parsedResponse.newInsights.map(insight => ({
-          id: Date.now() + Math.random(),
+        setInsights(prev => [...prev, ...parsedResponse.newInsights.map((insight, index) => ({
+          id: Date.now() + index + 2,
           content: insight,
-          timestamp: new Date()
+          timestamp: new Date(),
+          source: 'conversation'
         }))]);
       }
 
@@ -250,7 +312,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
       const errorMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: "I apologize, but I encountered an error processing your message. Please try again.",
+        content: `I apologize, but I encountered an error: ${error.message}. Please try again.`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -297,7 +359,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
             <Brain className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Memory Layer</h1>
+            <h1 className="text-xl font-bold text-gray-900">Cerebrum</h1>
             <p className="text-sm text-gray-600">Your AI cognitive partner</p>
           </div>
         </div>
@@ -466,7 +528,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                         <div key={entry.id} className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-400">
                           <p className="text-gray-900">{entry.content.replace('Journal Entry: ', '')}</p>
                           <div className="text-xs text-gray-500 mt-2">
-                            {new Date(entry.timestamp).toLocaleDateString()} at {formatTime(entry.timestamp)}
+                            {new Date(entry.timestamp).toLocaleDateString()} at {formatTime(new Date(entry.timestamp))}
                           </div>
                         </div>
                       ))
@@ -489,7 +551,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                       <p className="text-gray-900">{memory.content}</p>
                       <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
                         <span>Source: {memory.source}</span>
-                        <span>{formatTime(memory.timestamp)}</span>
+                        <span>{formatTime(new Date(memory.timestamp))}</span>
                       </div>
                     </div>
                   ))
@@ -515,7 +577,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 mt-2">
-                        Added: {formatTime(goal.timestamp)}
+                        Added: {formatTime(new Date(goal.timestamp))}
                       </div>
                     </div>
                   ))
@@ -541,7 +603,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 mt-2">
-                        Added: {formatTime(project.timestamp)}
+                        Added: {formatTime(new Date(project.timestamp))}
                       </div>
                     </div>
                   ))
@@ -564,7 +626,7 @@ CRITICAL: Your entire response must be a single, valid JSON object. Do not inclu
                         <div className="flex-1">
                           <p className="text-gray-900">{insight.content}</p>
                           <div className="text-xs text-gray-500 mt-2">
-                            Generated: {formatTime(insight.timestamp)}
+                            Generated: {formatTime(new Date(insight.timestamp))}
                           </div>
                         </div>
                       </div>
