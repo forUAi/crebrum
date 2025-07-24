@@ -2,7 +2,7 @@
 Cerebrum - AI-native second brain backend
 Main FastAPI application entry point
 """
-
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -10,7 +10,6 @@ from contextlib import asynccontextmanager
 import logging
 import sys
 from typing import Dict, Any
-
 from routes import memory, cognitive
 
 # Configure logging
@@ -21,9 +20,7 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout),
     ]
 )
-
 logger = logging.getLogger("cerebrum")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +38,6 @@ async def lifespan(app: FastAPI):
     yield
     
     logger.info("🧠 Cerebrum backend shutting down...")
-
 
 # Create FastAPI app with lifespan management
 app = FastAPI(
@@ -67,7 +63,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
@@ -76,7 +71,6 @@ async def global_exception_handler(request, exc):
         status_code=500,
         content={"error": "Internal server error", "detail": str(exc)}
     )
-
 
 # Health check endpoint
 @app.get("/", tags=["Health"])
@@ -89,7 +83,6 @@ async def root() -> Dict[str, Any]:
         "message": "🧠 Cerebrum AI Memory System Online"
     }
 
-
 @app.get("/health", tags=["Health"])
 async def health_check() -> Dict[str, str]:
     """Detailed health check endpoint"""
@@ -98,7 +91,6 @@ async def health_check() -> Dict[str, str]:
         "memory_store": "operational",
         "cognitive_engine": "operational"
     }
-
 
 # Include routers
 app.include_router(
@@ -113,14 +105,16 @@ app.include_router(
     tags=["Cognitive"]
 )
 
-
 if __name__ == "__main__":
     import uvicorn
+    
+    # Get port from environment variable or default to 8000 for local development
+    port = int(os.environ.get("PORT", 8000))
     
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
+        reload=False,  # Set to False for production
         log_level="info"
     )
