@@ -1,5 +1,7 @@
+# Build dependencies
 setuptools>=68.0.0
 wheel>=0.40.0
+pip>=23.0.0
 
 # Core FastAPI dependencies
 fastapi==0.104.1
@@ -10,7 +12,7 @@ pydantic-settings==2.1.0
 # Vector search and embeddings
 sentence-transformers==2.2.2
 faiss-cpu==1.7.4
-torch==2.5.1
+torch==2.1.0
 transformers==4.36.0
 
 # BM25 text search
