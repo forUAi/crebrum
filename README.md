@@ -1,30 +1,4 @@
-Crebrum: Your Second Brain
-Crebrum is a powerful, local-first, and privacy-focused "second brain" application designed to help you capture, connect, and retrieve your thoughts and knowledge effortlessly. It leverages the power of AI to provide semantic search and other smart features, running entirely on your local machine.
 
-🌟 Key Features
-🧠 Local-First & Private: All your data is stored locally on your machine. No cloud, no servers, no tracking. You have complete ownership and control of your knowledge.
-
-✍️ WYSIWYG Markdown Editor: A beautiful and intuitive editor for formatting your notes with Markdown.
-
-🔗 Bidirectional Linking: Create a network of your knowledge by linking notes together. See all the connections to a specific note automatically.
-
-🕸️ Graph View: Visualize the connections between your notes as a graph, helping you discover new relationships and insights.
-
-🤖 AI-Powered Semantic Search: Find what you're looking for based on meaning and context, not just keywords. Crebrum uses local AI models to understand your queries.
-
-💬 Chat with your Brain: Interact with your notes through a conversational interface. Ask questions and get answers from your own knowledge base.
-
-🖼️ Multi-Modal: Store and search through various types of media, including text, images, and more.
-
-🔌 Extensible: Built with extensibility in mind to allow for future plugins and integrations.
-
-💻 Cross-Platform: Available for macOS, Windows, and Linux.
-
-<img width="293" height="218" alt="image" src="https://github.com/user-attachments/assets/3057c34e-210c-4ecd-9d9e-c498071a6853" />
-
-
-
-🚀 Getting Started
 Prerequisites
 Ensure you have git and npm (or yarn/pnpm) installed on your system.
 
